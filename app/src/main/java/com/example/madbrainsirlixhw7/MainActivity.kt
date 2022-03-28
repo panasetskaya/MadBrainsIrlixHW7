@@ -2,7 +2,6 @@ package com.example.madbrainsirlixhw7
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -11,6 +10,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.Exception
 import java.lang.StringBuilder
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
@@ -29,29 +29,42 @@ class MainActivity : AppCompatActivity() {
             progressBar.visibility = View.GONE
             textViewResult.text = resultText
         } else {
+            // comment out one of the following:
             useThread()
+            //useExecutor()
+        }
+    }
+
+    fun useExecutor() {
+        val executor = Executors.newSingleThreadExecutor()
+        executor.execute{
+            workingBlock()
         }
     }
 
     fun useThread() {
         val thread = Thread {
-            try {
-                Thread.sleep(5000)
-                resultText = parseJson()
-                runOnUiThread {
-                    textViewResult.text = resultText
-                    progressBar.visibility = View.GONE
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            workingBlock()
         }
         thread.start()
     }
 
-    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
-        super.onSaveInstanceState(outState, outPersistentState)
+    fun workingBlock() {
+        try {
+            Thread.sleep(5000)
+            resultText = parseJson()
+            runOnUiThread {
+                textViewResult.text = resultText
+                progressBar.visibility = View.GONE
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("result", resultText)
+        super.onSaveInstanceState(outState)
     }
 
     fun parseJson(): String {
@@ -80,7 +93,7 @@ class MainActivity : AppCompatActivity() {
             val title = jsonObject.getString("title")
             val latina = Latina(userId, id, title, body)
             latinList.add(latina)
-            finalText = finalText + latina.toString() + "\n\n"
+            finalText = finalText + "${latina.title}: \n${latina.body}" + "\n\n\n"
         }
         return finalText
     }
